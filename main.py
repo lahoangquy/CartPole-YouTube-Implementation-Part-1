@@ -16,60 +16,42 @@ np.random.seed(1)
 env.seed(1)
 HighReward = 0
 BestWeights = None
+# The HighReward variable will ontain the maximum reward that is obtained up to current episode, this value will be used as a comparison value
+# The BestWeight variable will contain the sequence of weights that has registerd the maximum reward.
+# We can now implement the best weight sequence search through an iterative procedure for expisodes
 for i in range(200):
     observation = env.reset()
+    # To fix the weights we have used the np.random.uniform() function. This function draws samples from a uniform distribution
+    # The samples are uniformly distributed over the haft-open interval (low and high). It includes low but excludes high
+    # In order words, any value within the given interval is equally likely to be drawn by a uniform distribution
+    # 3 parameters have been passed; the lower boundary of the output interval. its upper boundary and the output shape.
+    # In our case, we requested 4 random values in the interval (-1,1). After doing this, we need to initialize the sum of the rewards
     Weights = np.random.uniform(-1,1,4)
     SumReward = 0
-    for j in range(1000):
-        env.render()
+    # We implement another iterative cycle to determine the maximum reward we can get with these weights.
+    # With this instruction, the training phase ends which will give us the sequence of weights that best approximates the evaluation function.
+    # We can test the system
+    # When the training phase is achieved, in practice it means that we have found the sequenc of weights that best approximates this function that is the one that has returned the best reward.
+    # Now we ahve to test the system with these values to check whether the pole is able to stand for at least 100 time steps
+    # Since we have done with the training phase to make the whole testing easily understandable, we will report the whole code block and then comment on it in detail on a line-by-line basis.
+    for j in range(100):
+        env.render() # display the current state
+# We have to decide the action. To decide the action we have used a linear combination of 2 vectors: weights and observation
+# To perform a linear combination we have used the np.matmul() function and it implements a matrix product of 2 ways
+# So if this product is 0 (move left), otherwise the action is 1 (move right)
+# The -ve product means that the pole is titled to the left. To balance this trend, it is important to push the cart to the left.
+# A positive product means that the pole is title to the right. To balance this trend, it is important to push the cart to the right.
         action = 0 if np.matmul(Weights,observation) < 0 else 1
+# We use the step() method to return the new states in response to the action with which we call it.
+# Obviously, the action we pass to the method is the one we have just decided
+# We print the step numbers and that action that has been deicded on for visual control of the flow.
+# After running the below code, we can verify that after the training phase the system is able to keep the pole in equilibrium 1000 steps
         observation, reward, done, info = env.step(action)
         SumReward += reward
         print(i, j, Weights, observation, action, SumReward, BestWeights)
+# At the end of the current iteration, we can make a comparison to check whether the total reward obtained is the highest one obtained so far
     if SumReward > HighReward:
+# If it is the highest reward obtained so far, update the high reward parameter.
         HighReward = SumReward
+# Once this is done, fix the sequence of Weights of the current step as the best one
         BestWeights = Weights
-
-# Calling the render() method will visually display the current state
-# while subsequent calls to env.step() will allow us to interact with the environment returning the new states
-# in response to the actions with which we call it.
-# In this way we have adopted random actions at each step. At this point it is certainly useful to know
-# What actions we are doing on the environment to decide future actions. The step() method returns exactly this.
-# In effect , this method will return the 4 values. The first value is the observation.
-# Observation is an environment specific object representing your observation of the environment.
-# The second value is the reward and it is the amount of reward achieve by the previous action.
-# The scale varies between environment but the goal is ways to increase the total reward.
-# The third value is the done and this determines whether it is time to reset the environment again.
-# Most (but not all) tasks are divided into well-defined episodes and done being True indicates that the episode is terminated.
-# The final value is the info. This shows you dianostic information that is useful for debugging and learning.
-#  A window will be displayed that contains our system and this is not stable and will soon move out of the screen.
-# This is because the cart is pushed randomly without taking into account the position of the pole.
-# To solve this problem that is to balance the pole it is important to set the push in the opposite direction to the inclination of the pole.
-# So we have to set only 2 actions -1 and 1, pushing the cart to the left and right.
-# But to do so, we do need know the data deriving from the observation of the environment at all times.
-# As mentioned before, these pieces of data are returned by the step() method.
-# In particular they are contained in the observation object.
-# This object contains cart position and velocity, pole angle and velocity at tip. And these values becone the input of the problem
-# As we have also anticipated , the system is balanced by applying a push to the car. There are 2 possible options
-# The first one is push the cart to the left and the second one is push the cart to the right.
-# It is clear that this is a binary classification problem: 4 inputs and a single binary output.
-# First let's consider how we can extract the values to be sued as input.
-# As can be seen below, we can see that the values contained in the observation objects are printed in the console.
-# All of this will be very useful. Using the values that are returned from the environment observation,
-# The agent has to decide on one of 2 possible actions: to move the cart left or right.
-# Now we will face the most demanding phase: training of our system.
-# The agent experience will be divided into a series of episodes.
-# The initial state of the agent is randonly sampled by a distribution and the interaction preceeds until the environment reaches a terminal state
-# This procedure is repeated for each episode with the aim of maximizing the total reward expection per episode and achieving a high level of performance in the fewest possible episode.
-# In learning phase, we must estimate the evaluation function.
-# This function must be able to evaluate through the sum of the rewards, the convenience or otherwise of a particular policy.
-# In other words, we must approxiate the evaluation function. how can we do this?
-# One solution is to use the artificial neural entwrok as a function approximator. Recall that the training of a neural network aims to identify the weights of the connections between neurons
-# In this case, we will choose random values with weights for each episode.
-# At the end, we will choose the combination of weights that has collected the max reward.
-# The state of the system at a given moment is returned ot us by the observation object .
-# To choose an action from the actual state, we cna use a linear combination of the weights and the observation.
-# This is one of the most important special cases of function approximation in which the approximate function is a linear function of the weight vector w.
-# For every state, s there is a real-valued vector x(s), with the smae number of components as w.
-# Linear method approxiamte the state-value function by the inner product between w and x(s)
-# In this way, we have specified the methodology that we intend to adopt for th esolution of the problem
